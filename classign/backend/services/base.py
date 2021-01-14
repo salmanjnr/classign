@@ -23,13 +23,3 @@ class Course(ABC):
     @abstractmethod
     def bulk_download(self):
         pass
-
-
-class Assignment(ABC):
-    @abstractmethod
-    def submit(self):
-        pass
-
-    @abstractmethod
-    def unsubmit(self):
-        pass

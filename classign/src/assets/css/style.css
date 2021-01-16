@@ -4840,26 +4840,27 @@ p.text-muted {
 
 /* ====== [ course card start ] ======== */
 .crs-card {
-  width: 310px;
+  width: 250px;
   height: max-content;
   background-color: white;
   border-radius: 7px;
   border: 1.9px solid #d7d7d7;
   text-decoration: none;
   overflow: hidden;
+  margin: 25px;
 }
 .crs-card:hover {
   /* transform: scale(1.01); */
   box-shadow: 0 3px 6px rgba(0,0,0,0.15), 0 3px 6px rgba(0,0,0,0.15);
-  top: -5px;
+  /* top: -5px; */
 }
 .crs-card .crs-card-top-half {
   border-top-left-radius: inherit;
   border-top-right-radius: inherit;
   width: 100%;
-  height: 150px;
+  height: 65px;
   background-color: #d7d7d7;
-  background-image: url(../images/dm_bg.jpg);
+  /* background-image: url(../images/dm_bg.jpg); */
   background-size: 100%;
   background-position: center center;
   background-repeat: no-repeat;
@@ -4871,11 +4872,11 @@ p.text-muted {
   text-align: center;
 }
 .crs-card .crs-card-bottom-half .crs-card-title {
-  font-size: 22px;
+  font-size: 17px;
   color: #1B1B1B;
 }
 .crs-card .crs-card-bottom-half .crs-card-subtitle {
-  font-size: 12px;
+  font-size: 11px;
   color: inherit;
 }
 /* ====== [ course card end ] ======== */

@@ -5,7 +5,7 @@ import os.path
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
-from classign.backend.services.base import LMS , Course
+from base import LMS , Course
 
 
 
@@ -18,7 +18,8 @@ class GoogleClassroom(LMS):
         This method is used to authenticate using Oauth 2.0 and using Gmail
         account linked to Classroom
         '''
-        SCOPES = ['https://www.googleapis.com/auth/classroom.courses.readonly']
+        SCOPES = ['https://www.googleapis.com/auth/classroom.courses.readonly',
+         'https://www.googleapis.com/auth/classroom.student-submissions.me.readonly']
         creds = None
         # The file token.pickle stores the user's access and refresh tokens, and is
         # created automatically when the authorization flow completes for the first
@@ -50,12 +51,35 @@ class GoogleClassroom(LMS):
         # Requesting courses from GoogleClasroom API after authenticating
         results = x.courses().list().execute()
         courses = results.get('courses' , [])
+
         #initialize an empty list to store coures names in it
         courses_name = []
         #Looping to store all course names
+        assignments = []
         if not courses:
             print('No Courses found')
         else:
             for course in courses:
                 courses_name.append(course['name'])
-        return courses_name
+        if not courses:
+            print('No Courses found')
+        else:
+            for course in courses:
+                work_results = x.courses().courseWork().list(
+                courseId=course['id']).execute()
+                work = work_results.get("courseWork" , [] )
+
+                for assignment in  work:
+                    assignments.append(assignment['title'])
+
+        return  assignments
+
+    def bulk_download(self):
+        # TODO
+        pass
+
+    def get_assignments(self):
+        pass
+
+x = GoogleClassroom()
+print(x.list_courses())

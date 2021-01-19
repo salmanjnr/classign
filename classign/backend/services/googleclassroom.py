@@ -19,7 +19,8 @@ class GoogleClassroom(LMS):
         account linked to Classroom
         '''
         SCOPES = ['https://www.googleapis.com/auth/classroom.courses.readonly',
-         'https://www.googleapis.com/auth/classroom.student-submissions.me.readonly']
+         'https://www.googleapis.com/auth/classroom.student-submissions.me.readonly'
+         ,'https://www.googleapis.com/auth/classroom.coursework.me']
         creds = None
         # The file token.pickle stores the user's access and refresh tokens, and is
         # created automatically when the authorization flow completes for the first
@@ -99,7 +100,7 @@ class GoogleClasroomCourse(Course):
         name = assignment_dict['title']
         due = assignment_dict['dueDate']
 
-        due_date = str(due['month']) + '/' + str(due['day'])
+        due_date = str(due['day']) + '/' + str(due['month'])
         return SimpleGoogleClassroomAssignment(assignment_id, self.id, name, due_date)
 
     def __str__(self):
@@ -110,4 +111,42 @@ class SimpleGoogleClassroomAssignment:
         self.course_id = course_id
         self.name = name
         self.due_date = due_date
-        
+    def __get_full_course_data(self):
+        x = self.authenticate()
+        # Requesting courses from GoogleClasroom API after authenticating
+        results = x.courses().courseWork().studentSubmissions(
+        ).list(courseId =self.course_id , courseWorkId  = self.id ).excute()
+        submissions = results.get('studentSubmissions' , [])
+        return submissions
+    def make_canvas_assignment_object(self):
+        submissions = self.__get_full_course_data()
+        state = submissions['state']
+        submission_types = submissions['courseWorkType']
+        assignment_object = GoogleClassroomAssignment(self.id, self.course_id,
+                            self.name, submission_types, self.due_date, state)
+        for submission_type in submission_types:
+            assignment_object.add_submission_type(submission_type)
+        return assignment_object
+        def __str__(self):
+            return ("assignment_id={}\nassignment_name={}\ndue_date={}").format(self.id,
+                                                                        self.name,
+                                                                        self.due_date)
+
+
+
+class GoogleClassroomAssignment:
+    def __init__(self, assignment_id, course_id, name, description, due_date,
+                 state):
+        self.id = assignment_id
+        self.course_id = course_id
+        self.name = name
+        self.description = submission_types
+        self.due_date = due_date
+        self.state = state
+
+    def __str__(self):
+        return ("assignment_id={}\nassignment_name={}\n"
+                "assignment_description={}\ndue_date={}").format(self.id, self.name,
+                                                                 self.description, self.due_date)
+    def add_submission_type(self, submission_type):
+        #TODO

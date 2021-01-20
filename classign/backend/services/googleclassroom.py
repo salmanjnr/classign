@@ -5,6 +5,7 @@ import os.path
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
+from abc import ABC, abstractmethod
 from base import LMS , Course
 
 
@@ -118,12 +119,13 @@ class SimpleGoogleClassroomAssignment:
         ).list(courseId =self.course_id , courseWorkId  = self.id ).excute()
         submissions = results.get('studentSubmissions' , [])
         return submissions
-    def make_canvas_assignment_object(self):
+    def make_classroom_assignment_object(self):
         submissions = self.__get_full_course_data()
         state = submissions['state']
         submission_types = submissions['courseWorkType']
+        submission_id = submissions['id']
         assignment_object = GoogleClassroomAssignment(self.id, self.course_id,
-                            self.name, submission_types, self.due_date, state)
+                            self.name, submission_types, self.due_date, state , submission_id)
         for submission_type in submission_types:
             assignment_object.add_submission_type(submission_type)
         return assignment_object
@@ -136,17 +138,52 @@ class SimpleGoogleClassroomAssignment:
 
 class GoogleClassroomAssignment:
     def __init__(self, assignment_id, course_id, name, description, due_date,
-                 state):
+                 state , submission_id):
         self.id = assignment_id
         self.course_id = course_id
         self.name = name
         self.description = submission_types
         self.due_date = due_date
         self.state = state
+        self.submission_id = submission_id
 
     def __str__(self):
         return ("assignment_id={}\nassignment_name={}\n"
                 "assignment_description={}\ndue_date={}").format(self.id, self.name,
                                                                  self.description, self.due_date)
     def add_submission_type(self, submission_type):
-        #TODO
+        if submission_type == 'SHORT_ANSWER_QUESTION': #or submission_type == 'MULTIPLE_CHOICE_QUESTION':
+            self.online_text_submission = TextEntrySubmission(self.course_id,
+                                                    self.id, self.submission_id)
+        elif submission_type == 'ASSIGNMENT':
+            self.online_upload_submission = FileSubmission(self.course_id,self.id,
+                                                           self.submission_id)
+
+        else:
+            pass
+
+class GoogleClassroomSubmission(ABC):
+    def __init__(self,course_id ,  assignment_id, submission_id ):
+        self.course_id = course_id
+        self.assignment_id = assignment_id
+        self.submission_id = submission_id
+
+
+    @abstractmethod
+    def submit(self, *args, **kwargs):
+        pass
+class TextEntrySubmission(GoogleClassroomSubmission):
+    def submit(self , answer):
+        x = self.authenticate()
+        # Requesting courses from GoogleClasroom API after authenticating
+        submission = x.courses().courseWork().studentSubmissions().get(
+        courseId= self.course_id , courseWorkId =self.assignment_id ,
+        id =self.submission_id).excute()
+        studentSubmission = submission.get('studentSubmissions' , [])
+        studentSubmission["shortAnswerSubmission"] = answer
+        request = x.courses().courseWork().studentSubmissions(
+        ).patch(courseId= self.course_id , courseWorkId =self.assignment_id ,
+        id =self.submission_id ,
+        body=studentSubmission , updateMask =  "shortAnswerSubmission" ).excute()
+
+        return request

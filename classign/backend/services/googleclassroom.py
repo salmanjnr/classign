@@ -158,7 +158,9 @@ class GoogleClassroomAssignment:
         elif submission_type == 'ASSIGNMENT':
             self.online_upload_submission = FileSubmission(self.course_id,self.id,
                                                            self.submission_id)
-
+        elif  submission_type == 'MULTIPLE_CHOICE_QUESTION':
+            self.online_text_submission = MultipleChoiceSubmission(self.course_id,
+                                                    self.id, self.submission_id)
         else:
             pass
 
@@ -172,6 +174,12 @@ class GoogleClassroomSubmission(ABC):
     @abstractmethod
     def submit(self, *args, **kwargs):
         pass
+    def Turn_in(self):
+        x = self.authenticate()
+        turning_in = x.courses().courseWork().studentSubmissions().turnIn(
+        courseId= self.course_id , courseWorkId =self.assignment_id ,
+        id =self.submission_id
+        ).excute()
 class TextEntrySubmission(GoogleClassroomSubmission):
     def submit(self , answer):
         x = self.authenticate()
@@ -187,3 +195,29 @@ class TextEntrySubmission(GoogleClassroomSubmission):
         body=studentSubmission , updateMask =  "shortAnswerSubmission" ).excute()
 
         return request
+class MultipleChoiceSubmission:
+    def submit(self,answer):
+        x = self.authenticate()
+        # Requesting courses from GoogleClasroom API after authenticating
+        submission = x.courses().courseWork().studentSubmissions().get(
+        courseId= self.course_id , courseWorkId =self.assignment_id ,
+        id =self.submission_id).excute()
+        studentSubmission = submission.get('studentSubmissions' , [])
+        studentSubmission['MULTIPLE_CHOICE_QUESTION'] = answer
+        request = x.courses().courseWork().studentSubmissions(
+        ).patch(courseId= self.course_id , courseWorkId =self.assignment_id ,
+        id =self.submission_id ,
+        body=studentSubmission , updateMask =  'MULTIPLE_CHOICE_QUESTION' ).excute()
+        return request
+
+class FileSubmission(CanvasSubmission):
+    def submit_url(self , url):
+        x = self.authenticate()
+        # Requesting courses from GoogleClasroom API after authenticating
+        submission = x.courses().courseWork().studentSubmissions().modifyAttachments(
+        courseId= self.course_id , courseWorkId =self.assignment_id ,
+        id =self.submission_id, body = ("addAttachments" = ["alternateLink" url])).excute()
+        studentSubmission = submission.get('studentSubmissions' , [])
+
+        return studentSubmission
+        

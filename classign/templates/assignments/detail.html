@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block content %}
+    <h1 class="text-center mb-3"> Assignments </h1>
+    <h2> {{ assignment.name }} </h2>
+    {{ assignment.description | safe }}
+    {% if forms %}
+	{% if file_upload_form %}
+	<form action="{% url 'assignments:assignment' assignment.id %}" method="post">
+	    {% csrf_token %}
+	    <h3> File Submission </h3>
+	    <p> We currently don't support direct file uploads. You can use a third party service to upload the file and post the link here for submission. </p>
+	    {{ file_upload_form.as_p }}
+	    <input type="submit" value="submit" class="btn btn-success btn-lg btn-block mt-4" />
+	</form>
+	{% endif %}
+	{% if text_input_form %}
+	<form action="{% url 'assignments:assignment' assignment.id %}" method="post">
+	    {% csrf_token %}
+	    <h3> Text Submission </h3>
+	    {{ text_input_form.as_p }}
+	    <input type="submit" value="submit" class="btn btn-success btn-lg btn-block mt-4" />
+	</form>
+	{% endif %}
+    {% else %}
+	<p> Submission method is not yet supported. Please visit the website for submission. </p>
+    {% endif %}
+{% endblock %}

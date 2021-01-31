@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block content %}
+    <h1 class="text-center mb-3"> Assignments </h1>
+    {% if assignments %}
+	{% for assignment in assignments %}
+	    <div class="card mb-3">
+		<div class="card-body">
+		    <p class="lead">{{ assignment.name }}</p>
+		    <a href="{% url 'assignments:assignment' assignment.id %}" class="btn btn-primary btn-sm"> Go to assignment </a>
+		</div>
+	    </div>
+	{% endfor %}
+    {% else %}
+	<p> No assignments </p>
+    {% endif %}
+{% endblock %}

@@ -7,35 +7,51 @@ from abc import abstractmethod
 
 
 class Canvas(models.Model):
+    """
+    Represents a canvas account.
+
+    Parameters:
+        access_token (str): canvas api access token.
+        school_address (str): the address of the school's canvas profile
+    """
+
     access_token = models.CharField(max_length=100)
     school_address = models.CharField(max_length=100, default='https://canvas.instructure.com')
 
     def update_courses(self):
+        """
+        Update courses associated with the acount.
+        """
         request_part = '/api/v1/courses?access_token={}&enrollment_type=student'.format(
             self.access_token)
         list_courses_request = urljoin(str(self.school_address), request_part)
-        response = requests.get(list_courses_request).json()
+        response = requests.get(list_courses_request).json()  # get courses through canvas apis
         for course in response:
             course_id = str(course['id'])
             course_name = course['name']
             course_code = course['course_code']
             try:
+                # if course is already there, update info
                 course = self.canvascourse_set.get(course_id=course_id)
                 course.name = course_name
                 course_code = course_code
                 course.save()
             except CanvasCourse.DoesNotExist:
+                # if course not registered in database, register it.
                 CanvasCourse.objects.create(lms=self, course_id=course_id, name=course_name,
                                             course_code=course_code)
 
     def get_todo(self):
-        self.update_courses()
-        self.canvasassignment_set.all().delete()
+        """
+        Get canvas TODO.
+        """
+        self.update_courses()  # make sure courses are up to date.
+        self.canvasassignment_set.all().delete()  # to avoid duplicates.
         request_part = '/api/v1/users/self/todo?access_token={}'.format(self.access_token)
         todo_request = urljoin(str(self.school_address), request_part)
         response = requests.get(todo_request).json()
         for item in response:
-            if (item['type'] == 'submitting') and ('assignment' in item):
+            if (item['type'] == 'submitting') and ('assignment' in item):  # only assignments
                 # extract attributes
                 assignment = item['assignment']
                 assignment_id = str(assignment['id'])
@@ -64,6 +80,15 @@ class Canvas(models.Model):
         return self.canvasassignment_set.all()
 
     def submit(self, assignment, url=None, text=None, files=None):
+        """
+        Submit assignment solution.
+
+        Parameters:
+            assignment (CanvasAssignment): the assignment associated with the submission
+            url (str): the url of the file (if file submission).
+            text (str): the html text (if online_text submission).
+            files (list): the list of file ids on canvas (if file submission)/
+        """
         if (url is not None) + (text is not None) + (files is not None) != 1:
             raise SubmissionException('Exactly one of url, text, and files should be passed')
 
@@ -77,6 +102,7 @@ class Canvas(models.Model):
             self.__submit_text(assignment, text)
 
     def __submit_from_url(self, assignment, url):
+        # submit assignment from url. this is a helper function
         request_part = '/api/v1/courses/{}/assignments/{}/submissions?access_token={}'.format(
             assignment.course.course_id, assignment.assignment_id, self.access_token)
         submit_request = urljoin(str(self.school_address), request_part)
@@ -88,6 +114,7 @@ class Canvas(models.Model):
         requests.post(submit_request, json=json)
 
     def __upload_from_url(self, course, url, name):
+        # upload file to canvas from url. this is a helper function
         request_part = '/api/v1/users/self/files?access_token={}'.format(self.access_token)
         upload_request = urljoin(str(self.school_address), request_part)
         json = {'url': url, 'name': name, 'parent_folder_path': f'/CLASSIGN/{course.course_id}'}
@@ -98,9 +125,11 @@ class Canvas(models.Model):
         return response['id']
 
     def __submit_files(self, assignment, files):
+        # TODO
         pass
 
     def __submit_text(self, assignment, text):
+        # submit text to canvas
         request_part = '/api/v1/courses/{}/assignments/{}/submissions?access_token={}'.format(
             assignment.course.course_id, assignment.assignment_id, self.access_token)
         submit_request = urljoin(str(self.school_address), request_part)
@@ -109,6 +138,7 @@ class Canvas(models.Model):
         requests.post(submit_request, json=json)
 
     def __submission_factory(self, submission, assignment):
+        # this function creates the appropriate submission object for each submission type.
         if submission == 'online_text_entry':
             return CanvasTextSubmission.objects.create(lms=self, course=assignment.course,
                                                        assignment=assignment)
@@ -116,7 +146,18 @@ class Canvas(models.Model):
             return CanvasFileSubmission.objects.create(lms=self, course=assignment.course,
                                                        assignment=assignment)
 
+
 class CanvasCourse(models.Model):
+    """
+    Represents a canvas course.
+
+    Parameters:
+        lms (Canvas): the canvas account associated with the course.
+        course_id (str): the id of the course on canvas.
+        name (str): the course name on canvas.
+        course_code (str): the code of the course registered on canvas.
+    """
+    lms_name = models.CharField(max_length=20, default="canvas")
     lms = models.ForeignKey(to=Canvas, on_delete=models.CASCADE)
     course_id = models.CharField(max_length=100)
     name = models.CharField(max_length=200)
@@ -124,6 +165,18 @@ class CanvasCourse(models.Model):
 
 
 class CanvasAssignment(models.Model):
+    """
+    Represents a canvas assignment.
+
+    Parameters:
+        lms (Canvas): the canvas account associated with the assignment.
+        course (CanvasCourse): the canvas course associated with the assignment.
+        assignment_id (str): the id of the assignment on canvas.
+        name (str): the name of the assignment.
+        due_date (datetime objects): the deadline of the assignment.
+        description (str): the description of the assignment.
+    """
+    lms_name = models.CharField(max_length=20, default="canvas")
     lms = models.ForeignKey(to=Canvas, on_delete=models.CASCADE, null=True)
     course = models.ForeignKey(to=CanvasCourse, on_delete=models.CASCADE, null=True)
     assignment_id = models.CharField(max_length=100)
@@ -133,6 +186,10 @@ class CanvasAssignment(models.Model):
 
 
 class CanvasSubmission(models.Model):
+    """
+    Represents a submission for an assignment. This is an abstract base class.
+    """
+    lms_name = models.CharField(max_length=20, default="canvas")
     lms = models.ForeignKey(to=Canvas, on_delete=models.CASCADE)
     course = models.ForeignKey(to=CanvasCourse, on_delete=models.CASCADE, null=True)
     assignment = models.ForeignKey(to=CanvasAssignment, on_delete=models.CASCADE, null=True)
@@ -146,12 +203,41 @@ class CanvasSubmission(models.Model):
 
 
 class CanvasTextSubmission(CanvasSubmission):
+    """
+    Represents a canvas text submission.
+
+    Parameters:
+        lms (Canvas): the canvas account associated with the submission.
+        course (CanvasCourse): the canvas course associated with the submission.
+        assignment (CanvasAssignment): the canvas assignment associated with the submission.
+    """
     def submit(self, text):
+        """
+        Submits the text using Canvas.submit method.
+
+        Parameters:
+            text (str): the text to be submitted.
+        """
         self.lms.submit(self.assignment, text=text)
 
 
 class CanvasFileSubmission(CanvasSubmission):
+    """
+    Represents a canvas file submission.
+
+    Parameters:
+        lms (Canvas): the canvas account associated with the submission.
+        course (CanvasCourse): the canvas course associated with the submission.
+        assignment (CanvasAssignment): the canvas assignment associated with the submission.
+    """
     def submit(self, url=None, files=None):
+        """
+        Submits the files using Canvas.submit method.
+
+        Parameters:
+            url (str): the url of the file.
+            files (list): the ids of the files on canvas files.
+        """
         if (url is None) and (files is None) or (url is not None) and (files is not None):
             raise SubmissionException("Exactly one of 'url' and 'files' should be passed.")
         if url:

@@ -6,7 +6,7 @@
 	    <div class="card mb-3">
 		<div class="card-body">
 		    <p class="lead">{{ assignment.name }}</p>
-		    <a href="{% url 'assignments:assignment' assignment.id %}" class="btn btn-primary btn-sm"> Go to assignment </a>
+		    <a href="{% url 'assignments:assignment' assignment.lms_name assignment.id %}" class="btn btn-primary btn-sm"> Go to assignment </a>
 		</div>
 	    </div>
 	{% endfor %}

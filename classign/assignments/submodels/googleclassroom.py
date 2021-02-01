@@ -1,7 +1,13 @@
+from __future__ import print_function
+import pickle
+import os.path
+from googleapiclient.discovery import build
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
 from urllib.parse import urljoin
 import requests
 from django.db import models
-from django.utils import timezone
+
 from datetime import datetime
 import pytz
 from abc import abstractmethod
@@ -9,6 +15,9 @@ from abc import abstractmethod
 
 
 class GoogleClassroom(models.Model):
+    """
+    Represents a GoogleClassroom account.
+    """
 
     def __authenticate(self):
         '''
@@ -43,46 +52,61 @@ class GoogleClassroom(models.Model):
         return service
 
     def update_courses(self):
+        """
+        This Method updates the courses from the Classroom API
+        """
         x = self.__authenticate()
         # Requesting courses from GoogleClasroom API after authenticating
         results = x.courses().list().execute()
         courses = results.get('courses' , [])
+        # Looping over courses to create course objects
         for course in courses:
             course_id = str(course['id'])
             course_name = course['name']
             try:
-                course = self.gclassroomcourse_set.get(course_id=course_id)
+                # if course is already there, update info
+                course = self.googleclassroomcourse_set.get(course_id=course_id)
                 course.name = course_name
                 course.save()
-            except GoogleClasroomCourse.DoesNotExist:
-                GoogleClasroomCourse.objects.create(lms=self, course_id=course_id, name=course_name,
-                                            )
+            except GoogleClassroomCourse.DoesNotExist:
+                # if course not registered in database, register it.
+                GoogleClassroomCourse.objects.create(lms=self, course_id=course_id, name=course_name)
         return courses
+
     def get_todo(self):
+        """
+        Get GoogleClassroom TODO.
+        """
+        # initilaize GMT time zone to check the deadline (API clock is GMT)
         tz = pytz.timezone("GMT")
+        # update the courses to get all the new assignments
         y = self.update_courses()
-        self.gclassroomassignment_set.all().delete()
+        self.googleclassroomassignment_set.all().delete()
         x = self.__authenticate()
         assignments = []
-        for course in y :
-            work_results = x.courses().courseWork().list(courseId=course['id']).execute()
+        for coursee in y :
+            #we loop over courses to get courseWork
+            work_results = x.courses().courseWork().list(courseId=coursee['id']).execute()
             coursework = work_results.get("courseWork" , [] )
             for assignment in coursework:
-                course = self.gclassroomcourse_set.get(course_id=course['id'])
+                # Creating objects for the courses
+                course = self.googleclassroomcourse_set.get(course_id=coursee['id'])
                 assignment_id = str(assignment['id'])
                 assignment_name = assignment['title']
                 assignment_description = assignment['workType']
                 course_id = assignment['courseId']
             try:
+                #WE Check the Due date becasue if there is no date it returns Key Error
                 due = assignment['dueDate']
                 time = assignment['dueTime']
-                #due_date = str(due['day']) + '/' + str(due['month']) + " " +
-                           #str(time["hours"]) + ':' + str(time["minutes"])
-                due_date = datetime.datetime(int(due['year']) , int(due['month'])
+                # We extract the due date from the courseWork
+                due_date = datetime(int(due['year']) , int(due['month'])
                 , int(due['day']) , int(time["hours"]), int(time["minutes"]), 00)
                 now = datetime.now(tz)
+                due_date = tz.localize(due_date)
+                #comparing due date to current time
                 if now >= due_date:
-                    assignment_object = GoogleClasroomAssignment.objects.create(
+                    assignment_object = GoogleClassroomAssignment.objects.create(
                         lms=self, course=course,
                         assignment_id=assignment_id,
                         name=assignment_name,
@@ -90,23 +114,41 @@ class GoogleClassroom(models.Model):
                         description=assignment_description)
             except KeyError:
                 due_date = None
-                assignment_object = GoogleClasroomAssignment.objects.create(
+                assignment_object = GoogleClassroomAssignment.objects.create(
                     lms=self, course=course,
                     assignment_id=assignment_id,
                     name=assignment_name,
                     due_date=due_date,
                     description=assignment_description)
 
-        return self.gclassroomassignment_set.all()
+        return self.googleclasroomassignment_set.all()
 
-class GoogleClasroomCourse(models.Model):
+class GoogleClassroomCourse(models.Model):
+    """
+    Represents a GoogleClassroom course.
+    Parameters:
+        lms (GoogleClassroom) : the GoogleClassroomaccount associated with the course.
+        course_id (str): the id of the course on GoogleClassroom.
+        name (str): the course name on GoogleClassroom.
+
+    """
     lms = models.ForeignKey(to=GoogleClassroom, on_delete=models.CASCADE)
     course_id = models.CharField(max_length=100)
     name = models.CharField(max_length=200)
 
-class CanvasAssignment(models.Model):
+class GoogleClassroomAssignment(models.Model):
+    """
+    Represents a GoogleClassroom assignment.
+    Parameters:
+        lms (GoogleClassroom): the GoogleClassroom account associated with the assignment.
+        course (GoogleClassroomCourse): the GoogleClassroom course associated with the assignment.
+        assignment_id (str): the id of the assignment on GoogleClassroom.
+        name (str): the name of the assignment.
+        due_date (datetime objects): the deadline of the assignment.
+        description (str): the description of the assignment.
+    """
     lms = models.ForeignKey(to=GoogleClassroom, on_delete=models.CASCADE, null=True)
-    course = models.ForeignKey(to=GoogleClasroomCourse, on_delete=models.CASCADE, null=True)
+    course = models.ForeignKey(to=GoogleClassroomCourse, on_delete=models.CASCADE, null=True)
     assignment_id = models.CharField(max_length=100)
     name = models.CharField(max_length=200)
     due_date = models.DateTimeField('due date', null=True)

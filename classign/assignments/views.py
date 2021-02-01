@@ -5,13 +5,40 @@ from .forms import FileUploadForm, HTMLInputForm
 
 
 def dashboard(request):
-    canvas = Canvas.objects.first()
-    assignments = canvas.get_todo()
+    """
+    Renders dashboard.
+
+    Parametrs:
+        request (WSGIRequest): the dashboard request.
+    """
+    print(type(request))
+    assignments = list()
+
+    try:
+        canvas = Canvas.objects.first()
+        assignments += canvas.get_todo()
+    except Canvas.DoesNotExist:
+        pass
+
     context = {'assignments': assignments}
     return render(request, 'assignments/dashboard.html', context)
 
 
-def assignment(request, assignment_id):
+def assignment(request, lms_name, assignment_id):
+    """
+    Renders assignment page.
+
+    Parametrs:
+        request (WSGIRequest): the dashboard request.
+        lms_name (str): the lms name associated with the request.
+        assignment_id (int): the id of the assignment (database id not lms id).
+    """
+    if lms_name == 'canvas':
+        return __canvas_assignment(request, assignment_id)
+
+
+def __canvas_assignment(request, assignment_id):
+    # helper function that does the actual rendering of canvas assignment page.
     try:
         assignment = CanvasAssignment.objects.get(pk=assignment_id)
     except CanvasAssignment.DoesNotExist:

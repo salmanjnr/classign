@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import Http404, HttpResponseRedirect
-from assignments.models import Canvas, CanvasAssignment
+from assignments.models import Canvas, CanvasAssignment, GoogleClassroom, GoogleClassroomAssignment
 from .forms import FileUploadForm, HTMLInputForm
 
 
@@ -11,13 +11,18 @@ def dashboard(request):
     Parametrs:
         request (WSGIRequest): the dashboard request.
     """
-    print(type(request))
     assignments = list()
 
     try:
         canvas = Canvas.objects.first()
         assignments += canvas.get_todo()
     except Canvas.DoesNotExist:
+        pass
+
+    try:
+        google_classroom = GoogleClassroom.objects.first()
+        assignments += google_classroom.get_todo()
+    except GoogleClassroom.DoesNotExist:
         pass
 
     context = {'assignments': assignments}
@@ -35,6 +40,8 @@ def assignment(request, lms_name, assignment_id):
     """
     if lms_name == 'canvas':
         return __canvas_assignment(request, assignment_id)
+    if lms_name == 'google_classroom':
+        return __google_classroom_assignment(request, assignment_id)
 
 
 def __canvas_assignment(request, assignment_id):
@@ -67,6 +74,25 @@ def __canvas_assignment(request, assignment_id):
 
         if assignment.canvasfilesubmission_set.all():
             context['file_upload_form'] = FileUploadForm()
+
+        if ('file_upload_form' in context) or ('text_input_form' in context):
+            context['forms'] = 1
+
+        return render(request, 'assignments/detail.html', context)
+
+
+def __google_classroom_assignment(request, assignment_id):
+    try:
+        assignment = GoogleClassroomAssignment.objects.get(pk=assignment_id)
+    except GoogleClassroomAssignment.DoesNotExist:
+        raise Http404("Assignment does not exist")
+
+    if request.method == 'POST':
+        return HttpResponseRedirect('/assignments')
+    else:
+        context = {'assignment': assignment}
+        context['text_input_form'] = HTMLInputForm()
+        context['file_upload_form'] = FileUploadForm()
 
         if ('file_upload_form' in context) or ('text_input_form' in context):
             context['forms'] = 1

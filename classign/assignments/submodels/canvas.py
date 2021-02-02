@@ -1,3 +1,4 @@
+from assignments.submodels.base import LMS, Course, Assignment
 from urllib.parse import urljoin
 import requests
 from django.db import models
@@ -6,7 +7,7 @@ from datetime import datetime
 from abc import abstractmethod
 
 
-class Canvas(models.Model):
+class Canvas(LMS):
     """
     Represents a canvas account.
 
@@ -147,7 +148,7 @@ class Canvas(models.Model):
                                                        assignment=assignment)
 
 
-class CanvasCourse(models.Model):
+class CanvasCourse(Course):
     """
     Represents a canvas course.
 
@@ -164,7 +165,7 @@ class CanvasCourse(models.Model):
     course_code = models.CharField(max_length=10)
 
 
-class CanvasAssignment(models.Model):
+class CanvasAssignment(Assignment):
     """
     Represents a canvas assignment.
 

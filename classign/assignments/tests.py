@@ -1,5 +1,6 @@
 from django.test import TestCase
 from assignments.models import Canvas
+from assignments.models import GoogleClassroom
 from os import getenv
 from dotenv import load_dotenv
 
@@ -15,13 +16,20 @@ class TestCanvas(TestCase):
         c.update_courses()
         print(c.canvascourse_set.all())
 
-    def test_get_assignments(self):
+    def test_todo(self):
         c = Canvas.objects.first()
-        print(c.get_assignments())
+        print(c.get_todo())
 
-    def test_full_assignment(self):
-        c = Canvas.objects.first()
-        c.update_assignments()
-        c.get_assignments()
-        a = c.simplecanvasassignment_set.first()
-        print(c.get_full_assignment(a))
+
+class TestClassroom(TestCase):
+    def setUp(self):
+        GoogleClassroom.objects.create()
+
+    def test_update_courses(self):
+        g = GoogleClassroom.objects.first()
+        g.update_courses()
+        print(g.googleclassroomcourse_set.all())
+
+    def test_get_assignments(self):
+        g = GoogleClassroom.objects.first()
+        print(g.get_todo())

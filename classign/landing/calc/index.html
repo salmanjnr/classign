@@ -1,0 +1,153 @@
+<!doctype html>
+<html class="no-js" lang="zxx">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>FitNet | Nutritional Needs Calculator</title>
+    <meta name="author" content="FitNet Ltd.">
+    <meta name="description" content="FitNet is The Most Advanced, Integrated Gamification-Based Application to Keep Fit and Be Healthier.">
+    <meta name="keywords" content="workout, app, application, mobile, fit, fitness, nutrition, trainer, coach, trainee, train, training, ">
+    <!-- <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"> -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="manifest" href="site.webmanifest">
+    <meta name="theme-color" content="#0063CC" />
+    <link rel="shortcut icon" type="image/x-icon" href="../assets/img/favicon.png">
+    <!-- Main: #0063CC -->
+    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.3/css/bootstrap.min.css'>
+    <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css">
+  </head>
+  <body>
+
+  <div class="content">
+      
+    <div class="content__inner">
+      <div class="container">
+        <h1 style="text-align: center; font-weight: 500;">Nutritional Needs Calculator</h1>
+        <hr>
+        <h2 class="content__title" style="font-size: 23px;">Please Enter All Data To Get The Result</h2>
+      </div>
+
+      <div class="container overflow-hidden">
+        <div class="multisteps-form">
+
+          <div class="row">
+            <div class="col-12 col-lg-8 ml-auto mr-auto mb-4">
+              <div class="multisteps-form__progress">
+                <button class="multisteps-form__progress-btn js-active" type="button" title="Age" disabled>Age</button>
+                <button class="multisteps-form__progress-btn" type="button" title="Weight" disabled>Weight</button>
+                <button class="multisteps-form__progress-btn" type="button" title="Height" disabled>Height</button>
+                <button class="multisteps-form__progress-btn" type="button" title="Gender" disabled>Gender</button>
+                <button class="multisteps-form__progress-btn" type="button" title="Activity" disabled>Activity</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-12 col-lg-8 m-auto">
+              <form class="multisteps-form__form" action="./res.php" method="post">
+
+                <div class="multisteps-form__panel shadow p-4 rounded bg-white js-active">
+                  <h3 class="multisteps-form__title">Age Range</h3>
+                  <div class="multisteps-form__content">
+                    <div class="form-row mt-4">
+                      <div class="col">
+                        <select name="age" class="form-control" required>
+                          <option value="1">15-18</option>
+                          <option value="2">19-20</option>
+                          <option value="3">21-25</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="button-row d-flex mt-4">
+                      <button class="btn btn-primary ml-auto js-btn-next" type="button" title="Next">Next</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="multisteps-form__panel shadow p-4 rounded bg-white">
+                  <h3 class="multisteps-form__title">What's Your Weight?</h3>
+                  <div class="multisteps-form__content">
+                    <div class="form-row mt-4">
+                      <div class="col">
+                        <input class="multisteps-form__input form-control" type="number" name="weight" placeholder="Enter Weight in Kg" required>
+                      </div>
+                    </div>
+                    <div class="button-row d-flex mt-4">
+                      <button class="btn btn-primary js-btn-prev" type="button" title="Prev">Prev</button>
+                      <button class="btn btn-primary ml-auto js-btn-next" type="button" title="Next">Next</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="multisteps-form__panel shadow p-4 rounded bg-white">
+                  <h3 class="multisteps-form__title">What's Your Height?</h3>
+                  <div class="multisteps-form__content">
+                    <div class="form-row mt-4">
+                      <div class="col">
+                        <input class="multisteps-form__input form-control" type="number" name="height" placeholder="Enter Height in cm">
+                      </div>
+                    </div>
+                    <div class="button-row d-flex mt-4">
+                      <button class="btn btn-primary js-btn-prev" type="button" title="Prev">Prev</button>
+                      <button class="btn btn-primary ml-auto js-btn-next" type="button" title="Next">Next</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="multisteps-form__panel shadow p-4 rounded bg-white">
+                  <h3 class="multisteps-form__title">What's Your Gender?</h3>
+                  <div class="multisteps-form__content">
+                    <div class="form-row mt-4">
+                      <div class="col">
+                        <div id="ml" class="multisteps-form__input form-control">
+                          <input type="radio" id="male" name="gender" value="male" required>
+                          <label for="male">Male</label>
+                        </div>
+                        <div id="fml" class="multisteps-form__input form-control">
+                          <input type="radio" id="female" name="gender" value="female">
+                          <label for="female">Female</label>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="button-row d-flex mt-4">
+                      <button class="btn btn-primary js-btn-prev" type="button" title="Prev">Prev</button>
+                      <button class="btn btn-primary ml-auto js-btn-next" type="button" title="Next">Next</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="multisteps-form__panel shadow p-4 rounded bg-white">
+                  <h3 class="multisteps-form__title">What's Your Activity Status?</h3>
+                  <div class="multisteps-form__content">
+                    <div class="form-row mt-4">
+                      <div class="col">
+                        <select name="activity" class="form-control" required>
+                          <option value="s">Sedentary</option>
+                          <option value="ma">Moderately Active</option>
+                          <option value="a">Active</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="button-row d-flex mt-4">
+                      <button class="btn btn-primary js-btn-prev" type="button" title="Prev">Prev</button>
+                      <button class="btn btn-success ml-auto" name="calculate" type="submit" title="Calc">Calculate</button>
+                    </div>
+                  </div>
+                </div>
+              </form>
+              <br>
+              <a href="../" style="padding:15px; color: #0063CC; font-size:25px; border: 3px solid #0063CC;border-radius: 15%; display: inline-block; vertical-align: bottom; line-height: normal;"><style>a{text-decoration:none;} a:hover{background-color: #0063CC; color: #000;} a:hover i{color: #fff;}</style><i class="fa fa-home" aria-hidden="true"></i></a>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.3/css/bootstrap.min.css'></script>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js'></script><script  src="./script.js"></script>
+
+  </body>
+</html>

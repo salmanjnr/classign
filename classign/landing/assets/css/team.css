@@ -1,26 +1,25 @@
 .team-section{
-  background: #f1f1f1;
   text-align: center;
+  margin-bottom: 105px;
 }
 .inner-width{
   max-width: 1200px;
   margin: auto;
-  padding: 40px;
+  padding: 45px;
   color: #333;
   overflow: hidden;
 }
 .team-section h1{
-  font-size: 20px;
+  font-size: 10px;
   text-transform: uppercase;
   display: inline-block;
-  /* border-bottom: 4px solid; */
   padding-bottom: 10px;
 }
 .pe{
   float: left;
   width: calc(100% / 3);
   overflow: hidden;
-  padding: 40px 0;
+  padding: 15px;
   transition: 0.4s;
 }
 .pe:hover{
@@ -31,9 +30,9 @@
   height: 120px;
 }
 .p-name{
-  font-size: 25px;
+  font-size: 17px;
   font-weight: 700;
-  margin: 16px 0;
+  margin: 15px 0;
   text-transform: uppercase;
 }
 .p-des{
@@ -55,7 +54,8 @@
   color: #333;
 }
 .p-sm a i{
-  color: #0063CC;
+  /* color: #0063CC; */
+  color: #04a9f5;
   line-height: 30px;
 }
 @media screen and (max-width:600px) {
